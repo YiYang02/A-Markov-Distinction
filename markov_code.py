@@ -50,23 +50,23 @@ class Kaleidoscope:
         self.SHAPE_ARC = 'arc'
         self.SHAPE_ELLIPSE = 'ellipse'
         self.SHAPE_TRANSITIONS = {
-            'arc': {'arc': 0.5, 'ellipse': 0.5},
-            'ellipse': {'arc': 0.6, 'ellipse': 0.4}
+            'arc': {'arc': 0.2, 'ellipse': 0.8},
+            'ellipse': {'arc': 0.8, 'ellipse': 0.2}
         }
 
         # Sides definitions and transitions
-        self.SIDES = [5, 10, 15, 20, 25, 30]
+        self.SIDES = [10, 12, 15, 20, 25, 30]
         self.SIDES_TRANSITIONS = {
-            5: {5: 0.1, 10: 0.3, 15: 0.3, 20: 0.2, 25: 0.1},
-            10: {5: 0.1, 10: 0.3, 15: 0.3, 20: 0.2, 25: 0.1},
-            15: {5: 0.2, 10: 0.2, 15: 0.2, 20: 0.2, 25: 0.1, 30: 0.1},
+            10: {10: 0.1, 12: 0.3, 15: 0.3, 20: 0.2, 25: 0.1},
+            12: {10: 0.1, 12: 0.3, 15: 0.3, 20: 0.2, 25: 0.1},
+            15: {10: 0.2, 12: 0.2, 15: 0.2, 20: 0.2, 25: 0.1, 30: 0.1},
             20: {10: 0.1, 15: 0.2, 20: 0.3, 25: 0.2, 30: 0.2},
             25: {15: 0.1, 20: 0.3, 25: 0.3, 30: 0.3},
             30: {20: 0.1, 25: 0.4, 30: 0.5}
         }
 
-    """
-        Return the next value based on the current value and its defined transitions.
+    """"
+    Return the next value based on the current value and its defined transitions.
     """
     def get_next(self, current_value, transition_dict):
         
@@ -78,42 +78,41 @@ class Kaleidoscope:
     Draws a segment of the kaleidoscope pattern based on the provided parameters.
     """
     def draw_kaleidoscope_pattern(self, draw, cx, cy, max_radius, current_sides, current_shape, current_color_name):
-        sides = self.get_next(current_sides, self.SIDES_TRANSITIONS)
-        current_color = self.COLORS[current_color_name]
+        next_sides = self.get_next(current_sides, self.SIDES_TRANSITIONS)
         
         # Draw arcs based on the given parameters
         if current_shape == self.SHAPE_ARC:
-            angle = 2 * math.pi / sides
-            for i in range(sides):
+            angle = 2 * math.pi / next_sides
+            for i in range(next_sides):
                 radius = random.uniform(5, max_radius)
-                start_angle = random.uniform(0, 2 * math.pi)
-                end_angle = start_angle + random.uniform(angle/2, angle)
-                color_name = self.get_next(current_color_name, self.COLOR_TRANSITIONS)
-                color = self.COLORS[color_name]
+                start_angle = 0
+                end_angle = 360
+                next_color_name = self.get_next(current_color_name, self.COLOR_TRANSITIONS)
                 x1, y1 = cx - radius, cy - radius
                 x2, y2 = cx + radius, cy + radius
-                draw.arc([x1, y1, x2, y2], math.degrees(start_angle), math.degrees(end_angle), fill=color, width=random.randint(1, 5))
+                draw.arc([x1, y1, x2, y2], math.degrees(start_angle), math.degrees(end_angle), fill=self.COLORS[current_color_name], width=random.randint(1, 5))
                 start_angle, end_angle = start_angle + angle, end_angle + angle
         # Draw ellipses based on the given parameters
         elif current_shape == self.SHAPE_ELLIPSE:
-            color_name = self.get_next(current_color_name, self.COLOR_TRANSITIONS)
-            color = self.COLORS[color_name]
+            next_color_name = self.get_next(current_color_name, self.COLOR_TRANSITIONS)
             radius = random.uniform(5, max_radius)
-            draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), outline=color, width=random.randint(1, 5))
+            draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), outline=self.COLORS[current_color_name], width=random.randint(1, 5))
 
-        return sides, current_shape, color_name
+        next_shape = self.get_next(current_shape, self.SHAPE_TRANSITIONS)
+
+        return next_sides, next_shape, next_color_name
 
     """
         Fills the center of the image with concentric circles.
     """
     def fill_center(self, draw, cx, cy, max_radius, current_color_name):
         for r in range(5, int(max_radius), 1):
-            color_name = self.get_next(current_color_name, self.COLOR_TRANSITIONS)
-            color = self.COLORS[color_name]
-            draw.ellipse((cx - r, cy - r, cx + r, cy + r), outline=color, width=1)
+            next_color_name = self.get_next(current_color_name, self.COLOR_TRANSITIONS)
+            next_color = self.COLORS[next_color_name]
+            draw.ellipse((cx - r, cy - r, cx + r, cy + r), outline=next_color, width=1)
 
     """
-        Creates the kaleidoscope image and saves it to the given filename.
+    Creates the kaleidoscope image and saves it to the given filename.
     """
     def create(self, filename, patterns):
         img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.BACKGROUND_COLOR)
@@ -122,7 +121,7 @@ class Kaleidoscope:
         # Center of the image
         cx, cy = self.WIDTH // 2, self.HEIGHT // 2
 
-        # Initial values for color, shape, and sides
+        # Initial values for color, shape, and sides. These values are random
         current_color_name = random.choice(list(self.COLORS.keys()))
         current_shape = random.choice([self.SHAPE_ARC, self.SHAPE_ELLIPSE])
         current_sides = random.choice(self.SIDES)
@@ -131,9 +130,8 @@ class Kaleidoscope:
         self.fill_center(draw, cx, cy, self.WIDTH, current_color_name)
         for i in range(patterns):
             current_sides, current_shape, current_color_name = self.draw_kaleidoscope_pattern(
-                draw, cx, cy, random.uniform(10, self.WIDTH/6), current_sides, current_shape, current_color_name)
-            current_shape = self.get_next(current_shape, self.SHAPE_TRANSITIONS)
-            img = img.rotate(random.uniform(-5, 5))
+                draw, cx, cy, random.uniform(self.WIDTH/6, self.WIDTH), current_sides, current_shape, current_color_name)
+            img = img.rotate(random.choice([-10, 10]))
 
         # Save and display the image
         img.save(filename)
@@ -141,4 +139,4 @@ class Kaleidoscope:
 
 if __name__ == "__main__":
     kaleidoscope = Kaleidoscope(800, 800)
-    kaleidoscope.create(filename="examples/kaleidoscope.png", patterns=50)
+    kaleidoscope.create(filename="examples/kaleidoscope9.png", patterns=100)
