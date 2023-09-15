@@ -112,4 +112,4 @@ class Kaleidoscope:
 
 if __name__ == "__main__":
     kaleidoscope = Kaleidoscope(800, 800)
-    kaleidoscope.create(filename="kaleidoscope.png", patterns=50)
+    kaleidoscope.create(filename="kaleidoscope5.png", patterns=5000)
