@@ -100,16 +100,18 @@ class Kaleidoscope:
 
         next_shape = self.get_next(current_shape, self.SHAPE_TRANSITIONS)
 
+        # return the next states to draw for the kaleidoscope
         return next_sides, next_shape, next_color_name
 
     """
-        Fills the center of the image with concentric circles.
+    Fills the center of the image with concentric circles.
     """
     def fill_center(self, draw, cx, cy, max_radius, current_color_name):
+        # Create circles starting from the middle of the image and then ripple outwards
         for r in range(5, int(max_radius), 1):
-            next_color_name = self.get_next(current_color_name, self.COLOR_TRANSITIONS)
-            next_color = self.COLORS[next_color_name]
-            draw.ellipse((cx - r, cy - r, cx + r, cy + r), outline=next_color, width=1)
+            current_color_name = self.get_next(current_color_name, self.COLOR_TRANSITIONS)
+            current_color = self.COLORS[current_color_name]
+            draw.ellipse((cx - r, cy - r, cx + r, cy + r), outline=current_color, width=1)
 
     """
     Creates the kaleidoscope image and saves it to the given filename.
@@ -126,11 +128,13 @@ class Kaleidoscope:
         current_shape = random.choice([self.SHAPE_ARC, self.SHAPE_ELLIPSE])
         current_sides = random.choice(self.SIDES)
 
-        # Fill the center and draw patterns
+        # Fill the center with circles starting from small circles all the way to large circles
         self.fill_center(draw, cx, cy, self.WIDTH, current_color_name)
+        # Create kaleidoscope patterns throughout the image such as ellipses and arcs
         for i in range(patterns):
             current_sides, current_shape, current_color_name = self.draw_kaleidoscope_pattern(
                 draw, cx, cy, random.uniform(self.WIDTH/6, self.WIDTH), current_sides, current_shape, current_color_name)
+            # Fuzzify the drawing so that it represents more of looking through a kaleidoscope
             img = img.rotate(random.choice([-10, 10]))
 
         # Save and display the image
@@ -139,4 +143,4 @@ class Kaleidoscope:
 
 if __name__ == "__main__":
     kaleidoscope = Kaleidoscope(800, 800)
-    kaleidoscope.create(filename="examples/kaleidoscope9.png", patterns=100)
+    kaleidoscope.create(filename="examples/kaleidoscope7.png", patterns=500)
